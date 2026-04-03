@@ -20,7 +20,12 @@ const compat = new FlatCompat({
 
 export default [
     {
-        ignores: ['**/dist', '**/.eslintrc.cjs', '**/tailwind.config.js'],
+        ignores: [
+            '**/dist',
+            '**/.sst/**',
+            '**/.eslintrc.cjs',
+            '**/tailwind.config.js',
+        ],
         // files: ['**/*.ts', '**/*.tsx'],
     },
     ...fixupConfigRules(
@@ -72,6 +77,12 @@ export default [
             'react/no-unescaped-entities': 'off',
             'react/prop-types': 'off',
             '@typescript-eslint/no-empty-object-type': 'off',
+        },
+    },
+    {
+        files: ['sst.config.ts'],
+        rules: {
+            '@typescript-eslint/triple-slash-reference': 'off',
         },
     },
 ];

@@ -1,4 +1,5 @@
 import type { DBRelationship } from '@/lib/domain/db-relationship';
+import { describe, expect, it } from 'vitest';
 import {
     getRelationshipEdgeHandleIds,
     getRelationshipSourceHandleId,

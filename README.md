@@ -138,6 +138,23 @@ VITE_OPENAI_API_ENDPOINT=http://localhost:8000/v1
 VITE_LLM_MODEL_NAME=Qwen/Qwen2.5-32B-Instruct-AWQ
 ```
 
+### Deploy To AWS With SST
+
+This repo includes an SST config for deploying the Vite app as a static site to S3 behind CloudFront. By default it uses the generated CloudFront domain, so it does not touch Route53 or any existing DNS setup.
+
+This setup is intentionally production-only at the script level. The included npm scripts always deploy to and remove the `production` stage.
+
+```bash
+npm install
+npm run sst:deploy
+```
+
+SST will build the app, upload `dist/` to S3, create a CloudFront distribution, and print the site URL after deploy.
+
+```bash
+npm run sst:remove
+```
+
 ## Try it on our website
 
 1. Go to [ChartDB.io](https://chartdb.io?ref=github_readme_2)
