@@ -39,10 +39,7 @@ import {
 import type { RelationshipEdgeType } from './relationship-edge/relationship-edge';
 import { RelationshipEdge } from './relationship-edge/relationship-edge';
 import { useChartDB } from '@/hooks/use-chartdb';
-import {
-    LEFT_HANDLE_ID_PREFIX,
-    TARGET_ID_PREFIX,
-} from './table-node/table-node-field';
+import { getRelationshipEdgeHandleIds } from './relationship-handles';
 import { Toolbar } from './toolbar/toolbar';
 import { useToast } from '@/components/toast/use-toast';
 import {
@@ -400,16 +397,6 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
     }, [isInitialLoadingNodes, fitView]);
 
     useEffect(() => {
-        const targetIndexes: Record<string, number> = relationships.reduce(
-            (acc, relationship) => {
-                acc[
-                    `${relationship.targetTableId}${relationship.targetFieldId}`
-                ] = 0;
-                return acc;
-            },
-            {} as Record<string, number>
-        );
-
         const targetDepIndexes: Record<string, number> = dependencies.reduce(
             (acc, dep) => {
                 acc[dep.tableId] = 0;
@@ -430,12 +417,15 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
             return [
                 ...relationships.map((relationship): RelationshipEdgeType => {
                     const prevState = prevEdgeStates.get(relationship.id);
+                    const { sourceHandle, targetHandle } =
+                        getRelationshipEdgeHandleIds(relationship);
+
                     return {
                         id: relationship.id,
                         source: relationship.sourceTableId,
                         target: relationship.targetTableId,
-                        sourceHandle: `${LEFT_HANDLE_ID_PREFIX}${relationship.sourceFieldId}`,
-                        targetHandle: `${TARGET_ID_PREFIX}${targetIndexes[`${relationship.targetTableId}${relationship.targetFieldId}`]++}_${relationship.targetFieldId}`,
+                        sourceHandle,
+                        targetHandle,
                         type: 'relationship-edge',
                         data: { relationship },
                         selected: prevState?.selected ?? false,

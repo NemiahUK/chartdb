@@ -36,10 +36,13 @@ import {
 } from './table-node-dependency-indicator';
 import { useCanvas } from '@/hooks/use-canvas';
 import { useLayout } from '@/hooks/use-layout';
-
-export const LEFT_HANDLE_ID_PREFIX = 'left_rel_';
-export const RIGHT_HANDLE_ID_PREFIX = 'right_rel_';
-export const TARGET_ID_PREFIX = 'target_rel_';
+import {
+    LEFT_HANDLE_ID_PREFIX,
+    RIGHT_HANDLE_ID_PREFIX,
+    TARGET_ID_PREFIX,
+    getRelationshipSourceHandleId,
+    getRelationshipTargetHandleId,
+} from '../relationship-handles';
 
 export interface TableNodeFieldProps {
     tableNodeId: string;
@@ -351,13 +354,19 @@ export const TableNodeField: React.FC<TableNodeFieldProps> = React.memo(
                 {isConnectable ? (
                     <>
                         <Handle
-                            id={`${RIGHT_HANDLE_ID_PREFIX}${field.id}`}
+                            id={getRelationshipSourceHandleId({
+                                fieldId: field.id,
+                                side: 'right',
+                            })}
                             className={`!h-4 !w-4 !border-2 !bg-pink-600 ${!focused || readonly || isTargetFromView ? '!invisible' : ''}`}
                             position={Position.Right}
                             type="source"
                         />
                         <Handle
-                            id={`${LEFT_HANDLE_ID_PREFIX}${field.id}`}
+                            id={getRelationshipSourceHandleId({
+                                fieldId: field.id,
+                                side: 'left',
+                            })}
                             className={`!h-4 !w-4 !border-2 !bg-pink-600 ${!focused || readonly || isTargetFromView ? '!invisible' : ''}`}
                             position={Position.Left}
                             type="source"
@@ -365,30 +374,16 @@ export const TableNodeField: React.FC<TableNodeFieldProps> = React.memo(
                     </>
                 ) : null}
                 {(!connection.inProgress || isTarget) && isConnectable && (
-                    <>
-                        {Array.from(
-                            { length: numberOfEdgesToField },
-                            (_, index) => index
-                        ).map((index) => (
-                            <Handle
-                                id={`${TARGET_ID_PREFIX}${index}_${field.id}`}
-                                key={`${TARGET_ID_PREFIX}${index}_${field.id}`}
-                                className={`!invisible`}
-                                position={Position.Left}
-                                type="target"
-                            />
-                        ))}
-                        <Handle
-                            id={`${TARGET_ID_PREFIX}${numberOfEdgesToField}_${field.id}`}
-                            className={
-                                isTarget
-                                    ? '!absolute !left-0 !top-0 !h-full !w-full !transform-none !rounded-none !border-none !opacity-0'
-                                    : `!invisible`
-                            }
-                            position={Position.Left}
-                            type="target"
-                        />
-                    </>
+                    <Handle
+                        id={getRelationshipTargetHandleId(field.id)}
+                        className={
+                            isTarget
+                                ? '!absolute !left-0 !top-0 !h-full !w-full !transform-none !rounded-none !border-none !opacity-0'
+                                : `!invisible`
+                        }
+                        position={Position.Left}
+                        type="target"
+                    />
                 )}
                 <div
                     className={cn('flex items-center gap-1 min-w-0 text-left', {

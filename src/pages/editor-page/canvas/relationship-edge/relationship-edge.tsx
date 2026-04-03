@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import type { Edge, EdgeProps } from '@xyflow/react';
 import { getSmoothStepPath, Position, useReactFlow } from '@xyflow/react';
 import type { DBRelationship, Cardinality } from '@/lib/domain/db-relationship';
-import { RIGHT_HANDLE_ID_PREFIX } from '../table-node/table-node-field';
+import { RIGHT_HANDLE_ID_PREFIX } from '../relationship-handles';
 import { useChartDB } from '@/hooks/use-chartdb';
 import { cn } from '@/lib/utils';
 import { getCardinalityMarkerId } from '../canvas-utils';

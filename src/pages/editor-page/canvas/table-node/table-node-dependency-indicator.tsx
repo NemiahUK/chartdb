@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import {
     LEFT_HANDLE_ID_PREFIX,
     RIGHT_HANDLE_ID_PREFIX,
-} from './table-node-field';
+} from '../relationship-handles';
 
 export const TOP_SOURCE_HANDLE_ID_PREFIX = 'top_dep_';
 export const BOTTOM_SOURCE_HANDLE_ID_PREFIX = 'bottom_dep_';
