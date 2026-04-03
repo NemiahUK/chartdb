@@ -39,7 +39,6 @@ import { useLayout } from '@/hooks/use-layout';
 import {
     LEFT_HANDLE_ID_PREFIX,
     RIGHT_HANDLE_ID_PREFIX,
-    TARGET_ID_PREFIX,
     getRelationshipSourceHandleId,
     getRelationshipTargetHandleId,
 } from '../relationship-handles';

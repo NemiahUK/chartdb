@@ -33,7 +33,8 @@ describe('relationship handle ids', () => {
         >;
 
         const targetHandles = relationships.map(
-            (relationship) => getRelationshipEdgeHandleIds(relationship).targetHandle
+            (relationship) =>
+                getRelationshipEdgeHandleIds(relationship).targetHandle
         );
 
         expect(targetHandles).toEqual([
@@ -52,8 +53,8 @@ describe('relationship handle ids', () => {
                 side: 'right',
             })
         ).toBe('right_rel_field-123');
-        expect(
-            getRelationshipTargetHandleId('field-123')
-        ).not.toMatch(/^target_rel_\d+_/);
+        expect(getRelationshipTargetHandleId('field-123')).not.toMatch(
+            /^target_rel_\d+_/
+        );
     });
 });
