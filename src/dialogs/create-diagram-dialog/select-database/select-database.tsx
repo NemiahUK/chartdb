@@ -69,7 +69,6 @@ export const SelectDatabase: React.FC<SelectDatabaseProps> = ({
                         type="button"
                         variant="outline"
                         onClick={createNewDiagram}
-                        disabled={databaseType === DatabaseType.GENERIC}
                     >
                         {t('new_diagram_dialog.empty_diagram')}
                     </Button>
@@ -79,7 +78,7 @@ export const SelectDatabase: React.FC<SelectDatabaseProps> = ({
                         disabled={databaseType === DatabaseType.GENERIC}
                         onClick={onContinue}
                     >
-                        {t('new_diagram_dialog.continue')}
+                        {t('new_diagram_dialog.import')}
                     </Button>
                 </div>
             </DialogFooter>

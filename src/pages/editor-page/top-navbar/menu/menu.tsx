@@ -43,6 +43,7 @@ export const Menu: React.FC<MenuProps> = () => {
         openOpenDiagramDialog,
         openExportSQLDialog,
         openImportDatabaseDialog,
+        openUpdateDBMLDialog,
         openExportImageDialog,
         openExportDiagramDialog,
         openImportDiagramDialog,
@@ -206,6 +207,9 @@ export const Menu: React.FC<MenuProps> = () => {
                                 }
                             >
                                 DBML
+                            </MenubarItem>
+                            <MenubarItem onClick={() => openUpdateDBMLDialog()}>
+                                Update from DBML
                             </MenubarItem>
                         </MenubarSubContent>
                     </MenubarSub>

@@ -20,6 +20,8 @@ import type { ExportImageDialogProps } from '@/dialogs/export-image-dialog/expor
 import { ExportImageDialog } from '@/dialogs/export-image-dialog/export-image-dialog';
 import { ExportDiagramDialog } from '@/dialogs/export-diagram-dialog/export-diagram-dialog';
 import { ImportDiagramDialog } from '@/dialogs/import-diagram-dialog/import-diagram-dialog';
+import type { UpdateDBMLDialogProps } from '@/dialogs/update-dbml-dialog/update-dbml-dialog';
+import { UpdateDBMLDialog } from '@/dialogs/update-dbml-dialog/update-dbml-dialog';
 
 export const DialogProvider: React.FC<React.PropsWithChildren> = ({
     children,
@@ -134,6 +136,19 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
     const [openImportDiagramDialog, setOpenImportDiagramDialog] =
         useState(false);
 
+    // Update DBML dialog
+    const [openUpdateDBMLDialog, setOpenUpdateDBMLDialog] = useState(false);
+    const [updateDBMLDialogParams, setUpdateDBMLDialogParams] =
+        useState<Omit<UpdateDBMLDialogProps, 'dialog'>>();
+    const openUpdateDBMLDialogHandler: DialogContext['openUpdateDBMLDialog'] =
+        useCallback(
+            (params) => {
+                setUpdateDBMLDialogParams(params);
+                setOpenUpdateDBMLDialog(true);
+            },
+            [setOpenUpdateDBMLDialog]
+        );
+
     return (
         <dialogContext.Provider
             value={{
@@ -163,6 +178,8 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
                 openImportDiagramDialog: () => setOpenImportDiagramDialog(true),
                 closeImportDiagramDialog: () =>
                     setOpenImportDiagramDialog(false),
+                openUpdateDBMLDialog: openUpdateDBMLDialogHandler,
+                closeUpdateDBMLDialog: () => setOpenUpdateDBMLDialog(false),
             }}
         >
             {children}
@@ -197,6 +214,10 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
             />
             <ExportDiagramDialog dialog={{ open: openExportDiagramDialog }} />
             <ImportDiagramDialog dialog={{ open: openImportDiagramDialog }} />
+            <UpdateDBMLDialog
+                dialog={{ open: openUpdateDBMLDialog }}
+                {...updateDBMLDialogParams}
+            />
         </dialogContext.Provider>
     );
 };
