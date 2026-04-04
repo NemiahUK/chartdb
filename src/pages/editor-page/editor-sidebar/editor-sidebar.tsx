@@ -45,6 +45,8 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = () => {
     const {
         selectSidebarSection,
         selectedSidebarSection,
+        hideSidePanel,
+        isSidePanelShowed,
         showSidePanel,
         selectVisualsTab,
     } = useLayout();
@@ -53,6 +55,33 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = () => {
     const { effectiveTheme } = useTheme();
     const { databaseType } = useChartDB();
     const { openCreateDiagramDialog, openOpenDiagramDialog } = useDialog();
+
+    const toggleSidebarSection = React.useCallback(
+        (section: 'tables' | 'dbml' | 'refs' | 'customTypes' | 'visuals') => {
+            const isActiveSection =
+                isSidePanelShowed && selectedSidebarSection === section;
+
+            if (isActiveSection) {
+                hideSidePanel();
+                return;
+            }
+
+            showSidePanel();
+            selectSidebarSection(section);
+
+            if (section === 'visuals') {
+                selectVisualsTab('areas');
+            }
+        },
+        [
+            hideSidePanel,
+            isSidePanelShowed,
+            selectSidebarSection,
+            selectVisualsTab,
+            selectedSidebarSection,
+            showSidePanel,
+        ]
+    );
 
     const diagramItems: SidebarItem[] = useMemo(
         () => [
@@ -81,61 +110,48 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = () => {
             {
                 title: t('editor_sidebar.tables'),
                 icon: Table,
-                onClick: () => {
-                    showSidePanel();
-                    selectSidebarSection('tables');
-                },
-                active: selectedSidebarSection === 'tables',
+                onClick: () => toggleSidebarSection('tables'),
+                active:
+                    isSidePanelShowed && selectedSidebarSection === 'tables',
             },
             {
                 title: 'DBML',
                 icon: CodeXml,
-                onClick: () => {
-                    showSidePanel();
-                    selectSidebarSection('dbml');
-                },
-                active: selectedSidebarSection === 'dbml',
+                onClick: () => toggleSidebarSection('dbml'),
+                active: isSidePanelShowed && selectedSidebarSection === 'dbml',
             },
             {
                 title: t('editor_sidebar.refs'),
                 icon: Workflow,
-                onClick: () => {
-                    showSidePanel();
-                    selectSidebarSection('refs');
-                },
-                active: selectedSidebarSection === 'refs',
+                onClick: () => toggleSidebarSection('refs'),
+                active: isSidePanelShowed && selectedSidebarSection === 'refs',
             },
             ...(supportsCustomTypes(databaseType)
                 ? [
                       {
                           title: t('editor_sidebar.custom_types'),
                           icon: FileType,
-                          onClick: () => {
-                              showSidePanel();
-                              selectSidebarSection('customTypes');
-                          },
-                          active: selectedSidebarSection === 'customTypes',
+                          onClick: () => toggleSidebarSection('customTypes'),
+                          active:
+                              isSidePanelShowed &&
+                              selectedSidebarSection === 'customTypes',
                       },
                   ]
                 : []),
             {
                 title: t('editor_sidebar.visuals'),
                 icon: Group,
-                onClick: () => {
-                    showSidePanel();
-                    selectSidebarSection('visuals');
-                    selectVisualsTab('areas');
-                },
-                active: selectedSidebarSection === 'visuals',
+                onClick: () => toggleSidebarSection('visuals'),
+                active:
+                    isSidePanelShowed && selectedSidebarSection === 'visuals',
             },
         ],
         [
-            selectSidebarSection,
-            selectedSidebarSection,
             t,
-            showSidePanel,
             databaseType,
-            selectVisualsTab,
+            isSidePanelShowed,
+            selectedSidebarSection,
+            toggleSidebarSection,
         ]
     );
 

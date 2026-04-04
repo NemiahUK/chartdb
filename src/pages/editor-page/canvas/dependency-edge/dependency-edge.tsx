@@ -23,7 +23,7 @@ export const DependencyEdge: React.FC<EdgeProps<DependencyEdgeType>> = ({
     source,
     target,
     selected,
-    // data,
+    data,
 }) => {
     const { getInternalNode } = useReactFlow();
     const { dependencies } = useChartDB();
@@ -126,6 +126,8 @@ export const DependencyEdge: React.FC<EdgeProps<DependencyEdgeType>> = ({
             targetX,
         ]
     );
+    const isHighlighted = data?.highlighted ?? false;
+    const isActive = selected || isHighlighted;
 
     return (
         <>
@@ -135,7 +137,9 @@ export const DependencyEdge: React.FC<EdgeProps<DependencyEdgeType>> = ({
                 fill="none"
                 className={cn([
                     'react-flow__edge-path',
-                    `!stroke-2 ${selected ? '!stroke-pink-600' : '!stroke-blue-400'}`,
+                    isActive
+                        ? '!stroke-pink-600 !stroke-[2.5px]'
+                        : '!stroke-blue-400 !stroke-2',
                 ])}
                 onClick={(e) => {
                     if (e.detail === 2) {

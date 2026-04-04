@@ -28,6 +28,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useLocalConfig } from '@/hooks/use-local-config';
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from '@/context/alert-context/alert-context';
+import { useCanvas } from '@/hooks/use-canvas';
 
 export interface MenuProps {}
 
@@ -65,6 +66,7 @@ export const Menu: React.FC<MenuProps> = () => {
     } = useLocalConfig();
     const { t } = useTranslation();
     const { redo, undo, hasRedo, hasUndo } = useHistory();
+    const { reorderTables } = useCanvas();
     const { exportImage } = useExportImage();
     const navigate = useNavigate();
 
@@ -145,6 +147,16 @@ export const Menu: React.FC<MenuProps> = () => {
     const showOrHideMiniMap = useCallback(() => {
         setShowMiniMapOnCanvas(!showMiniMapOnCanvas);
     }, [showMiniMapOnCanvas, setShowMiniMapOnCanvas]);
+
+    const showReorderConfirmation = useCallback(() => {
+        showAlert({
+            title: t('reorder_diagram_alert.title'),
+            description: t('reorder_diagram_alert.description'),
+            actionLabel: t('reorder_diagram_alert.reorder'),
+            closeLabel: t('reorder_diagram_alert.cancel'),
+            onAction: reorderTables,
+        });
+    }, [t, showAlert, reorderTables]);
 
     const emojiAI = '✨';
 
@@ -353,6 +365,9 @@ export const Menu: React.FC<MenuProps> = () => {
                         </MenubarShortcut>
                     </MenubarItem>
                     <MenubarSeparator />
+                    <MenubarItem onClick={showReorderConfirmation}>
+                        {t('reorder_diagram_alert.reorder')}
+                    </MenubarItem>
                     <MenubarItem
                         onClick={() =>
                             showAlert({

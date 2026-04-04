@@ -14,6 +14,10 @@ export const MAX_TABLE_SIZE = 450;
 export const MID_TABLE_SIZE = 337;
 export const MIN_TABLE_SIZE = 224;
 export const TABLE_MINIMIZED_FIELDS = 10;
+const TABLE_LAYOUT_SPACING = 200;
+const TABLE_LAYOUT_START_X = 100;
+const TABLE_LAYOUT_START_Y = 100;
+const DEFAULT_LAYOUT_ASPECT_RATIO = 16 / 10;
 
 export interface DBTable {
     id: string;
@@ -193,38 +197,151 @@ function positionTablesWithinArea(
     if (tables.length === 0) return;
 
     const padding = 20; // Padding from area edges
-    const gapX = 50;
-    const gapY = 50;
+    const gapX = TABLE_LAYOUT_SPACING;
+    const gapY = TABLE_LAYOUT_SPACING;
 
     // Available space within the area
     const availableWidth = area.width - 2 * padding;
-    const availableHeight = area.height - 2 * padding;
 
-    // Simple grid layout within the area
-    const cols = Math.max(1, Math.floor(availableWidth / 250));
-    const rows = Math.ceil(tables.length / cols);
+    const widestTable = Math.max(
+        ...tables.map((table) => getTableDimensions(table).width)
+    );
+    const cols = Math.max(
+        1,
+        Math.floor((availableWidth + gapX) / (widestTable + gapX))
+    );
+    const positionedTables = createGridPositions({
+        tables,
+        startX: area.x + padding,
+        startY: area.y + padding,
+        columns: cols,
+        horizontalGap: gapX,
+        verticalGap: gapY,
+        availableWidth,
+    });
 
-    const cellWidth = availableWidth / cols;
-    const cellHeight = availableHeight / Math.max(rows, 1);
-
-    tables.forEach((table, index) => {
-        const col = index % cols;
-        const row = Math.floor(index / cols);
-
-        // Position relative to area
-        table.x = area.x + padding + col * cellWidth + gapX / 2;
-        table.y = area.y + padding + row * cellHeight + gapY / 2;
-
-        // Ensure table stays within area bounds
+    tables.forEach((table) => {
+        const nextPosition = positionedTables.get(table.id);
         const tableDimensions = getTableDimensions(table);
         const maxX = area.x + area.width - padding - tableDimensions.width;
         const maxY = area.y + area.height - padding - tableDimensions.height;
 
-        table.x = Math.min(table.x, maxX);
-        table.y = Math.min(table.y, maxY);
+        table.x = Math.min(nextPosition?.x ?? table.x, maxX);
+        table.y = Math.min(nextPosition?.y ?? table.y, maxY);
         table.x = Math.max(table.x, area.x + padding);
         table.y = Math.max(table.y, area.y + padding);
     });
+}
+
+function createGridPositions({
+    tables,
+    startX,
+    startY,
+    columns,
+    horizontalGap,
+    verticalGap,
+    availableWidth,
+}: {
+    tables: DBTable[];
+    startX: number;
+    startY: number;
+    columns: number;
+    horizontalGap: number;
+    verticalGap: number;
+    availableWidth?: number;
+}): Map<string, { x: number; y: number }> {
+    const safeColumns = Math.max(1, columns);
+    const maxColumnWidth = Math.max(
+        ...tables.map((table) => getTableDimensions(table).width)
+    );
+    const positions = new Map<string, { x: number; y: number }>();
+    let currentY = startY;
+
+    for (let index = 0; index < tables.length; index += safeColumns) {
+        const rowTables = tables.slice(index, index + safeColumns);
+        const rowHeight = Math.max(
+            ...rowTables.map((table) => getTableDimensions(table).height)
+        );
+        const rowWidth =
+            rowTables.length * maxColumnWidth +
+            Math.max(0, rowTables.length - 1) * horizontalGap;
+        const rowStartX =
+            availableWidth && rowWidth < availableWidth
+                ? startX + (availableWidth - rowWidth) / 2
+                : startX;
+
+        rowTables.forEach((table, rowIndex) => {
+            const { width, height } = getTableDimensions(table);
+            positions.set(table.id, {
+                x:
+                    rowStartX +
+                    rowIndex * (maxColumnWidth + horizontalGap) +
+                    (maxColumnWidth - width) / 2,
+                y: currentY + (rowHeight - height) / 2,
+            });
+        });
+
+        currentY += rowHeight + verticalGap;
+    }
+
+    return positions;
+}
+
+function getLayoutAspectRatio() {
+    if (typeof window !== 'undefined') {
+        return window.innerWidth / Math.max(window.innerHeight, 1);
+    }
+
+    return DEFAULT_LAYOUT_ASPECT_RATIO;
+}
+
+function getSuggestedColumnCount({
+    tables,
+    horizontalGap,
+    verticalGap,
+    availableWidth,
+}: {
+    tables: DBTable[];
+    horizontalGap: number;
+    verticalGap: number;
+    availableWidth?: number;
+}) {
+    if (tables.length === 0) {
+        return 1;
+    }
+
+    const maxColumnWidth = Math.max(
+        ...tables.map((table) => getTableDimensions(table).width)
+    );
+    const averageTableHeight =
+        tables.reduce(
+            (sum, table) => sum + getTableDimensions(table).height,
+            0
+        ) / tables.length;
+
+    const aspectRatio = getLayoutAspectRatio();
+    const estimatedColumns = Math.round(
+        Math.sqrt(
+            (aspectRatio * tables.length * (averageTableHeight + verticalGap)) /
+                (maxColumnWidth + horizontalGap)
+        )
+    );
+
+    const widthLimitedColumns =
+        availableWidth === undefined
+            ? tables.length
+            : Math.max(
+                  1,
+                  Math.floor(
+                      (availableWidth + horizontalGap) /
+                          (maxColumnWidth + horizontalGap)
+                  )
+              );
+
+    return Math.max(
+        1,
+        Math.min(tables.length, widthLimitedColumns, estimatedColumns || 1)
+    );
 }
 
 // Original algorithm with area avoidance
@@ -237,10 +354,10 @@ function adjustTablePositionsWithoutAreas(
     const adjustPositionsForTables = (tablesToAdjust: DBTable[]) => {
         const defaultTableWidth = 200;
         const defaultTableHeight = 300;
-        const gapX = 100;
-        const gapY = 100;
-        const startX = 100;
-        const startY = 100;
+        const gapX = TABLE_LAYOUT_SPACING;
+        const gapY = TABLE_LAYOUT_SPACING;
+        const startX = TABLE_LAYOUT_START_X;
+        const startY = TABLE_LAYOUT_START_Y;
 
         // Create a map of table connections
         const tableConnections = new Map<string, Set<string>>();
@@ -255,23 +372,7 @@ function adjustTablePositionsWithoutAreas(
             tableConnections.get(rel.targetTableId)!.add(rel.sourceTableId);
         });
 
-        // Separate tables into connected and isolated
-        const connectedTables: DBTable[] = [];
-        const isolatedTables: DBTable[] = [];
-
-        tablesToAdjust.forEach((table) => {
-            if (
-                tableConnections.has(table.id) &&
-                tableConnections.get(table.id)!.size > 0
-            ) {
-                connectedTables.push(table);
-            } else {
-                isolatedTables.push(table);
-            }
-        });
-
-        // Sort connected tables by number of connections (most connected first)
-        connectedTables.sort(
+        const sortedTables = [...tablesToAdjust].sort(
             (a, b) =>
                 (tableConnections.get(b.id)?.size || 0) -
                 (tableConnections.get(a.id)?.size || 0)
@@ -334,160 +435,94 @@ function adjustTablePositionsWithoutAreas(
             return false;
         };
 
-        const findNonOverlappingPosition = (
-            baseX: number,
-            baseY: number,
-            tableId: string
-        ): { x: number; y: number } => {
-            const { width, height } = getTableWidthAndHeight(tableId);
-            const spiralStep = Math.max(width, height) / 2;
-            let angle = 0;
-            let radius = 0;
-            let iterations = 0;
-            const maxIterations = 1000; // Prevent infinite loop
-
-            while (iterations < maxIterations) {
-                const x = baseX + radius * Math.cos(angle);
-                const y = baseY + radius * Math.sin(angle);
-                if (!isOverlapping(x, y, tableId)) {
-                    return { x, y };
-                }
-                angle += Math.PI / 4;
-                if (angle >= 2 * Math.PI) {
-                    angle = 0;
-                    radius += spiralStep;
-                }
-                iterations++;
-            }
-
-            // If we can't find a non-overlapping position, return a position far from others
-            return {
-                x: baseX + radius * Math.cos(angle),
-                y: baseY + radius * Math.sin(angle),
-            };
-        };
-
-        const positionTable = (
-            table: DBTable,
-            baseX: number,
-            baseY: number
+        const doesGridOverlap = (
+            positions: Map<string, { x: number; y: number }>,
+            groupTables: DBTable[]
         ) => {
-            if (positionedTables.has(table.id)) return;
+            return groupTables.some((table) => {
+                const position = positions.get(table.id);
 
-            const { x, y } = findNonOverlappingPosition(baseX, baseY, table.id);
-
-            table.x = x;
-            table.y = y;
-            tablePositions.set(table.id, { x: table.x, y: table.y });
-            positionedTables.add(table.id);
-
-            // Position connected tables
-            const connectedTables = tableConnections.get(table.id) || new Set();
-            let angle = 0;
-            const angleStep = (2 * Math.PI) / connectedTables.size;
-
-            connectedTables.forEach((connectedTableId) => {
-                if (!positionedTables.has(connectedTableId)) {
-                    const connectedTable = tablesToAdjust.find(
-                        (t) => t.id === connectedTableId
-                    );
-                    if (connectedTable) {
-                        const { width: tableWidth, height: tableHeight } =
-                            getTableWidthAndHeight(table.id);
-                        const {
-                            width: connectedTableWidth,
-                            height: connectedTableHeight,
-                        } = getTableWidthAndHeight(connectedTableId);
-                        const avgWidth = (tableWidth + connectedTableWidth) / 2;
-
-                        const avgHeight =
-                            (tableHeight + connectedTableHeight) / 2;
-
-                        const newX =
-                            x + Math.cos(angle) * (avgWidth + gapX * 2);
-                        const newY =
-                            y + Math.sin(angle) * (avgHeight + gapY * 2);
-                        positionTable(connectedTable, newX, newY);
-                        angle += angleStep;
-                    }
+                if (!position) {
+                    return false;
                 }
+
+                return isOverlapping(position.x, position.y, table.id);
             });
         };
 
-        // Position connected tables first
-        if (connectedTables.length < 100) {
-            // Use relationship-based positioning for small sets of connected tables
-            connectedTables.forEach((table, index) => {
-                if (!positionedTables.has(table.id)) {
-                    const row = Math.floor(index / 6);
-                    const col = index % 6;
-                    const { width: tableWidth, height: tableHeight } =
-                        getTableWidthAndHeight(table.id);
+        const shiftGridPositions = (
+            positions: Map<string, { x: number; y: number }>,
+            shiftY: number
+        ) => {
+            return new Map(
+                [...positions.entries()].map(([tableId, position]) => [
+                    tableId,
+                    {
+                        x: position.x,
+                        y: position.y + shiftY,
+                    },
+                ])
+            );
+        };
 
-                    const x = startX + col * (tableWidth + gapX * 2);
-                    const y = startY + row * (tableHeight + gapY * 2);
-                    positionTable(table, x, y);
-                }
-            });
-        } else {
-            // Use simple grid layout for large sets of connected tables
-            connectedTables.forEach((table, index) => {
-                if (!positionedTables.has(table.id)) {
-                    const row = Math.floor(index / 10); // More columns for large sets
-                    const col = index % 10;
-                    const { width: tableWidth, height: tableHeight } =
-                        getTableWidthAndHeight(table.id);
-
-                    const x = startX + col * (tableWidth + gapX);
-                    const y = startY + row * (tableHeight + gapY);
-
-                    // Direct positioning without relationship-based clustering
-                    const finalPos = findNonOverlappingPosition(x, y, table.id);
-                    table.x = finalPos.x;
-                    table.y = finalPos.y;
-                    tablePositions.set(table.id, { x: table.x, y: table.y });
-                    positionedTables.add(table.id);
-                }
-            });
-        }
-
-        // Find the bottommost position of connected tables for isolated table placement
-        let maxY = startY;
-        for (const pos of tablePositions.values()) {
-            const tableId = [...tablePositions.entries()].find(
-                ([, p]) => p === pos
-            )?.[0];
-            if (tableId) {
-                const { height } = getTableWidthAndHeight(tableId);
-                maxY = Math.max(maxY, pos.y + height);
+        const placeTableGroup = (
+            groupTables: DBTable[],
+            baseY: number,
+            availableWidth?: number
+        ) => {
+            if (groupTables.length === 0) {
+                return baseY;
             }
-        }
 
-        // Position isolated tables after connected ones
-        if (isolatedTables.length > 0) {
-            const isolatedStartY = maxY + gapY * 2;
-            const isolatedStartX = startX;
-
-            isolatedTables.forEach((table, index) => {
-                if (!positionedTables.has(table.id)) {
-                    const row = Math.floor(index / 8); // More columns for isolated tables
-                    const col = index % 8;
-                    const { width: tableWidth, height: tableHeight } =
-                        getTableWidthAndHeight(table.id);
-
-                    // Use a simple grid layout for isolated tables
-                    const x = isolatedStartX + col * (tableWidth + gapX);
-                    const y = isolatedStartY + row * (tableHeight + gapY);
-
-                    // Find non-overlapping position
-                    const finalPos = findNonOverlappingPosition(x, y, table.id);
-                    table.x = finalPos.x;
-                    table.y = finalPos.y;
-                    tablePositions.set(table.id, { x: table.x, y: table.y });
-                    positionedTables.add(table.id);
-                }
+            const columnCount = getSuggestedColumnCount({
+                tables: groupTables,
+                horizontalGap: gapX,
+                verticalGap: gapY,
+                availableWidth,
             });
-        }
+            let plannedPositions = createGridPositions({
+                tables: groupTables,
+                startX,
+                startY: baseY,
+                columns: columnCount,
+                horizontalGap: gapX,
+                verticalGap: gapY,
+                availableWidth,
+            });
+
+            let safety = 0;
+            while (
+                doesGridOverlap(plannedPositions, groupTables) &&
+                safety < 200
+            ) {
+                plannedPositions = shiftGridPositions(plannedPositions, gapY);
+                safety++;
+            }
+
+            let maxBottom = baseY;
+
+            groupTables.forEach((table) => {
+                if (positionedTables.has(table.id)) {
+                    return;
+                }
+
+                const plannedPosition = plannedPositions.get(table.id) ?? {
+                    x: startX,
+                    y: baseY,
+                };
+                table.x = plannedPosition.x;
+                table.y = plannedPosition.y;
+                tablePositions.set(table.id, plannedPosition);
+                positionedTables.add(table.id);
+
+                const { height } = getTableWidthAndHeight(table.id);
+                maxBottom = Math.max(maxBottom, plannedPosition.y + height);
+            });
+
+            return maxBottom + gapY;
+        };
+
+        placeTableGroup(sortedTables, startY);
 
         // Apply positions to tables
         tablesToAdjust.forEach((table) => {

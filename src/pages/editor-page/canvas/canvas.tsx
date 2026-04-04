@@ -10,6 +10,7 @@ import type {
     NodePositionChange,
     NodeRemoveChange,
     NodeDimensionChange,
+    NodeMouseHandler,
     OnEdgesChange,
     OnNodesChange,
     NodeTypes,
@@ -118,8 +119,9 @@ import { filterTable } from '@/lib/domain/diagram-filter/filter';
 import { defaultSchemas } from '@/lib/data/default-schemas';
 import { useDiff } from '@/context/diff-context/use-diff';
 import { useClickAway } from 'react-use';
+import { buildRelationshipRoutes } from './relationship-router';
 
-const HIGHLIGHTED_EDGE_Z_INDEX = 1;
+const HIGHLIGHTED_EDGE_Z_INDEX = 100;
 const DEFAULT_EDGE_Z_INDEX = 0;
 
 export type EdgeType =
@@ -268,7 +270,7 @@ export interface CanvasProps {
 
 export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
     const { getEdge, getInternalNode, getNode } = useReactFlow();
-    const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
+    const [focusedTableIds, setFocusedTableIds] = useState<string[]>([]);
     const [selectedRelationshipIds, setSelectedRelationshipIds] = useState<
         string[]
     >([]);
@@ -349,6 +351,46 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
     const [edges, setEdges, onEdgesChange] =
         useEdgesState<EdgeType>(initialEdges);
 
+    const visibleTableIds = useMemo(
+        () =>
+            nodes
+                .filter(
+                    (node): node is TableNodeType =>
+                        node.type === 'table' &&
+                        !node.hidden &&
+                        !!node.data?.table
+                )
+                .map((node) => node.id)
+                .sort(),
+        [nodes]
+    );
+    const routeTables = useMemo(
+        () =>
+            tables.map((table) => {
+                const node = nodes.find(
+                    (currentNode): currentNode is TableNodeType =>
+                        currentNode.type === 'table' &&
+                        currentNode.id === table.id
+                );
+
+                if (!node) {
+                    return table;
+                }
+
+                return {
+                    ...table,
+                    x: node.position.x,
+                    y: node.position.y,
+                    width:
+                        node.measured?.width ??
+                        (typeof node.width === 'number'
+                            ? node.width
+                            : table.width),
+                };
+            }),
+        [nodes, tables]
+    );
+
     const [snapToGridEnabled, setSnapToGridEnabled] = useState(false);
 
     const [cursorPosition, setCursorPosition] = useState<{
@@ -404,6 +446,14 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
             },
             {} as Record<string, number>
         );
+        const focusedTableIdsSet = new Set(focusedTableIds);
+        const selectedRelationshipIdsSet = new Set(selectedRelationshipIds);
+        const obstacleTableIds = new Set(visibleTableIds);
+        const relationshipRoutes = buildRelationshipRoutes({
+            relationships,
+            tables: routeTables,
+            obstacleTableIds,
+        });
 
         setEdges((prevEdges) => {
             // Create a map of previous edge states to preserve selection
@@ -419,6 +469,10 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                     const prevState = prevEdgeStates.get(relationship.id);
                     const { sourceHandle, targetHandle } =
                         getRelationshipEdgeHandleIds(relationship);
+                    const highlighted =
+                        selectedRelationshipIdsSet.has(relationship.id) ||
+                        focusedTableIdsSet.has(relationship.sourceTableId) ||
+                        focusedTableIdsSet.has(relationship.targetTableId);
 
                     return {
                         id: relationship.id,
@@ -427,13 +481,24 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                         sourceHandle,
                         targetHandle,
                         type: 'relationship-edge',
-                        data: { relationship },
+                        data: {
+                            relationship,
+                            route: relationshipRoutes.get(relationship.id),
+                            highlighted,
+                        },
                         selected: prevState?.selected ?? false,
-                        animated: prevState?.animated ?? false,
+                        animated: highlighted || prevState?.animated || false,
+                        zIndex: highlighted
+                            ? HIGHLIGHTED_EDGE_Z_INDEX
+                            : DEFAULT_EDGE_Z_INDEX,
                     };
                 }),
                 ...dependencies.map((dep): DependencyEdgeType => {
                     const prevState = prevEdgeStates.get(dep.id);
+                    const highlighted =
+                        selectedRelationshipIdsSet.has(dep.id) ||
+                        focusedTableIdsSet.has(dep.dependentTableId) ||
+                        focusedTableIdsSet.has(dep.tableId);
                     return {
                         id: dep.id,
                         source: dep.dependentTableId,
@@ -441,27 +506,27 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                         sourceHandle: `${TOP_SOURCE_HANDLE_ID_PREFIX}${dep.dependentTableId}`,
                         targetHandle: `${TARGET_DEP_PREFIX}${targetDepIndexes[dep.tableId]++}_${dep.tableId}`,
                         type: 'dependency-edge',
-                        data: { dependency: dep },
+                        data: { dependency: dep, highlighted },
                         hidden: !showDBViews,
                         selected: prevState?.selected ?? false,
-                        animated: prevState?.animated ?? false,
+                        animated: highlighted || prevState?.animated || false,
+                        zIndex: highlighted
+                            ? HIGHLIGHTED_EDGE_Z_INDEX
+                            : DEFAULT_EDGE_Z_INDEX,
                     };
                 }),
             ];
         });
-    }, [relationships, dependencies, setEdges, showDBViews]);
-
-    useEffect(() => {
-        const selectedNodesIds = nodes
-            .filter((node) => node.selected)
-            .map((node) => node.id);
-
-        if (equal(selectedNodesIds, selectedTableIds)) {
-            return;
-        }
-
-        setSelectedTableIds(selectedNodesIds);
-    }, [nodes, setSelectedTableIds, selectedTableIds]);
+    }, [
+        relationships,
+        dependencies,
+        visibleTableIds,
+        focusedTableIds,
+        selectedRelationshipIds,
+        setEdges,
+        showDBViews,
+        routeTables,
+    ]);
 
     useEffect(() => {
         const selectedEdgesIds = edges
@@ -476,7 +541,7 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
     }, [edges, setSelectedRelationshipIds, selectedRelationshipIds]);
 
     useEffect(() => {
-        const selectedTableIdsSet = new Set(selectedTableIds);
+        const focusedTableIdsSet = new Set(focusedTableIds);
         const selectedRelationshipIdsSet = new Set(selectedRelationshipIds);
 
         setEdges((prevEdges) => {
@@ -488,8 +553,8 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                 .map((edge): EdgeType => {
                     const shouldBeHighlighted =
                         selectedRelationshipIdsSet.has(edge.id) ||
-                        selectedTableIdsSet.has(edge.source) ||
-                        selectedTableIdsSet.has(edge.target);
+                        focusedTableIdsSet.has(edge.source) ||
+                        focusedTableIdsSet.has(edge.target);
 
                     const currentHighlighted =
                         (edge as Exclude<EdgeType, TempFloatingEdgeType>).data
@@ -542,14 +607,42 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
 
             return hasChanges ? newEdges : prevEdges;
         });
-    }, [selectedRelationshipIds, selectedTableIds, setEdges]);
+    }, [selectedRelationshipIds, focusedTableIds, setEdges]);
+
+    const onNodeClickHandler: NodeMouseHandler<NodeType> = useCallback(
+        (_event, node) => {
+            if (node.type === 'table') {
+                setFocusedTableIds([node.id]);
+            }
+        },
+        []
+    );
+
+    const onNodeDragStartHandler: NodeMouseHandler<NodeType> = useCallback(
+        (_event, node) => {
+            if (node.type === 'table') {
+                setFocusedTableIds([node.id]);
+            }
+        },
+        []
+    );
 
     useEffect(() => {
         setNodes((prevNodes) => {
+            const previousNodeState = new Map(
+                prevNodes.map((node) => [
+                    node.id,
+                    {
+                        selected: node.selected,
+                        dragging: node.dragging,
+                    },
+                ])
+            );
             const newNodes = [
                 ...tables.map((table) => {
                     const isOverlapping =
                         (overlapGraph.graph.get(table.id) ?? []).length > 0;
+                    const previousState = previousNodeState.get(table.id);
                     const node = tableToTableNode(table, {
                         filter,
                         databaseType,
@@ -570,6 +663,8 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
 
                     return {
                         ...node,
+                        selected: previousState?.selected ?? node.selected,
+                        dragging: previousState?.dragging ?? node.dragging,
                         data: {
                             ...node.data,
                             isOverlapping,
@@ -578,15 +673,21 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                         },
                     };
                 }),
-                ...areas.map((area) =>
-                    areaToAreaNode(area, {
+                ...areas.map((area) => ({
+                    ...areaToAreaNode(area, {
                         tables,
                         filter,
                         databaseType,
                         filterLoading,
-                    })
-                ),
-                ...notes.map((note) => noteToNoteNode(note)),
+                    }),
+                    selected: previousNodeState.get(area.id)?.selected ?? false,
+                    dragging: previousNodeState.get(area.id)?.dragging ?? false,
+                })),
+                ...notes.map((note) => ({
+                    ...noteToNoteNode(note),
+                    selected: previousNodeState.get(note.id)?.selected ?? false,
+                    dragging: previousNodeState.get(note.id)?.dragging ?? false,
+                })),
                 ...prevNodes.filter(
                     (n) =>
                         n.type === 'temp-cursor' ||
@@ -1583,6 +1684,8 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
             // Close relationship edit popover
             closeRelationshipPopover();
 
+            setFocusedTableIds([]);
+
             canvasEvents.emit({
                 action: 'pan_click',
                 data: {
@@ -1598,6 +1701,7 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
             endFloatingEdgeCreation,
             hideCreateRelationshipNode,
             closeRelationshipPopover,
+            setFocusedTableIds,
         ]
     );
 
@@ -1619,6 +1723,8 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                     nodes={nodesWithCursor}
                     edges={edgesWithFloating}
                     onNodesChange={onNodesChangeHandler}
+                    onNodeClick={onNodeClickHandler}
+                    onNodeDragStart={onNodeDragStartHandler}
                     onEdgesChange={onEdgesChangeHandler}
                     maxZoom={5}
                     minZoom={0.1}
