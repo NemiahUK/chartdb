@@ -25,6 +25,8 @@ export default [
             '**/.sst/**',
             '**/.eslintrc.cjs',
             '**/tailwind.config.js',
+            '**/sst.config.ts',
+            '**/sst-env.d.ts',
         ],
         // files: ['**/*.ts', '**/*.tsx'],
     },
