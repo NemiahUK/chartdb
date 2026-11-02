@@ -11,7 +11,7 @@ npm ci
 npm run vscode:package
 ```
 
-In VS Code, run **Extensions: Install from VSIX…** and select `vscode/chartdb-repository-0.1.0.vsix`. Reload VS Code if requested. The extension runs in the workspace, including with Remote SSH and Dev Containers. It requires a trusted workspace.
+In VS Code, run **Extensions: Install from VSIX…** and select `vscode/chartdb-repository-0.1.2.vsix`. Reload VS Code if requested. The extension runs in the workspace, including with Remote SSH and Dev Containers. It requires a trusted workspace.
 
 ## Configure a repository
 
@@ -28,7 +28,9 @@ Add `.chartdb.json` at the workspace folder root. For Cosmos:
 }
 ```
 
-Run **ChartDB: Open Repository Diagram** from the command palette. With multiple workspace folders, select the repository to open. Paths are relative to that folder. One configured diagram per workspace folder is supported in this version.
+Open the configured layout JSON or DBML source and click **Open in ChartDB** above line 1, or use the preview icon in the editor toolbar. The text link requires VS Code’s `editor.codeLens` setting (enabled by default); the toolbar icon works with CodeLens disabled. Files are detected by their paths, including in Remote SSH workspaces and when a file uses a custom language mode. Both actions target that file’s repository and reuse an already open diagram. JSON remains the default editor.
+
+You can also run **ChartDB: Open Repository Diagram** from the command palette. With multiple workspace folders, select the repository to open. Paths are relative to that folder. One configured diagram per workspace folder is supported in this version.
 
 If `layout.json` is missing, the extension reads colours, positions, groups and notes from `importLayoutFrom` and creates the layout file. It does not modify the original export. `importLayoutFrom` is optional for new diagrams and can be removed after migration. `generic` matches Cosmos's current ChartDB export; other supported database types are listed in the configuration schema.
 

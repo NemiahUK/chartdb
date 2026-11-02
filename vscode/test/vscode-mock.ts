@@ -4,19 +4,30 @@ export const files = new Map<string, string>();
 export const stored = new Map<string, unknown>();
 export const documents: MockDocument[] = [];
 export const panels: MockPanel[] = [];
-export const registered = new Map<string, () => Promise<void>>();
+export const registered = new Map<string, (uri?: Uri) => Promise<void>>();
 export const fileListeners: ((uri: Uri) => void)[] = [];
 const disposable = { dispose() {} };
 export class Uri {
-    constructor(public path: string) {}
-    static joinPath(base: Uri, ...parts: string[]) {
-        return new Uri([base.path, ...parts].join('/'));
-    }
-    toString() {
+    constructor(
+        public path: string,
+        public scheme = 'file',
+        public authority = ''
+    ) {}
+    get fsPath() {
         return this.path;
     }
+    static joinPath(base: Uri, ...parts: string[]) {
+        return new Uri(
+            [base.path, ...parts].join('/'),
+            base.scheme,
+            base.authority
+        );
+    }
+    toString() {
+        return `${this.scheme}://${this.authority}${this.path}`;
+    }
     with({ path }: { path: string }) {
-        return new Uri(path);
+        return new Uri(path, this.scheme, this.authority);
     }
 }
 export class FileSystemError extends Error {
@@ -31,9 +42,37 @@ export class RelativePattern {
 export class Range {
     constructor(
         public start: number,
-        public end: number
+        public end: number,
+        public endLine?: number,
+        public endCharacter?: number
     ) {}
 }
+export class EventEmitter<T> {
+    event = vi.fn();
+    fire = vi.fn<(value?: T) => void>();
+    dispose() {}
+}
+export class CodeLens {
+    constructor(
+        public range: Range,
+        public command: { title: string; command: string; arguments?: Uri[] }
+    ) {}
+}
+export const lensProviders: {
+    provideCodeLenses(
+        document: { uri: Uri },
+        token: { isCancellationRequested: boolean }
+    ): Promise<CodeLens[]>;
+}[] = [];
+export const languages = {
+    registerCodeLensProvider: vi.fn(
+        (selector: unknown, provider: (typeof lensProviders)[number]) => {
+            if (selector) lensProviders.push(provider);
+            return disposable;
+        }
+    ),
+};
+export const contextKeys = new Map<string, unknown>();
 export class WorkspaceEdit {
     operations: { uri: Uri; text: string; create?: boolean }[] = [];
     createFile(uri: Uri, options: { contents: Uint8Array }) {
@@ -92,6 +131,11 @@ export const workspace = {
     isTrusted: true,
     workspaceFolders: [{ name: 'fixture', uri: new Uri('/repo') }],
     textDocuments: documents,
+    getWorkspaceFolder: (uri: Uri) =>
+        workspace.workspaceFolders
+            .filter((folder) => uri.path.startsWith(folder.uri.path + '/'))
+            .sort((a, b) => b.uri.path.length - a.uri.path.length)[0],
+    onDidChangeWorkspaceFolders: () => disposable,
     fs: {
         readFile: vi.fn(async (uri: Uri) => {
             const value = files.get(uri.path);
@@ -135,6 +179,7 @@ export const workspace = {
     onDidSaveTextDocument: () => disposable,
 };
 export const window = {
+    activeTextEditor: undefined as { document: { uri: Uri } } | undefined,
     createWebviewPanel: () => {
         const panel = new MockPanel();
         panels.push(panel);
@@ -146,14 +191,19 @@ export const window = {
     showWorkspaceFolderPick: vi.fn(),
 };
 export const commands = {
-    registerCommand: (name: string, handler: () => Promise<void>) => {
+    executeCommand: vi.fn(
+        async (command: string, key: string, value: unknown) => {
+            if (command === 'setContext') contextKeys.set(key, value);
+        }
+    ),
+    registerCommand: (name: string, handler: (uri?: Uri) => Promise<void>) => {
         registered.set(name, handler);
         return disposable;
     },
 };
 export const ViewColumn = { Active: 1 };
 export const context = {
-    subscriptions: [],
+    subscriptions: [] as { dispose(): void }[],
     extensionUri: new Uri('/extension'),
     workspaceState: {
         get: (key: string) => stored.get(key),
@@ -165,6 +215,13 @@ export const context = {
 };
 export function reset() {
     for (const panel of panels) panel.dispose();
+    for (const subscription of context.subscriptions) subscription.dispose();
+    context.subscriptions.length = 0;
+    lensProviders.length = 0;
+    contextKeys.clear();
+    workspace.workspaceFolders = [{ name: 'fixture', uri: new Uri('/repo') }];
+    workspace.isTrusted = true;
+    window.activeTextEditor = undefined;
     files.clear();
     stored.clear();
     documents.length = 0;

@@ -2,7 +2,7 @@
     "name": "chartdb-repository",
     "displayName": "ChartDB Repository Diagrams",
     "description": "View DBML and edit diagram layouts alongside your repository.",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "publisher": "nemiah",
     "license": "AGPL-3.0-only",
     "engines": {
@@ -17,7 +17,10 @@
         "workspace"
     ],
     "activationEvents": [
-        "onCommand:chartdb.open"
+        "onCommand:chartdb.open",
+        "onLanguage:json",
+        "onLanguage:jsonc",
+        "workspaceContains:.chartdb.json"
     ],
     "capabilities": {
         "untrustedWorkspaces": {
@@ -32,7 +35,8 @@
         "commands": [
             {
                 "command": "chartdb.open",
-                "title": "ChartDB: Open Repository Diagram"
+                "title": "ChartDB: Open Repository Diagram",
+                "icon": "$(preview)"
             }
         ],
         "jsonValidation": [
@@ -40,6 +44,15 @@
                 "fileMatch": "/.chartdb.json",
                 "url": "./config.schema.json"
             }
-        ]
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "chartdb.open",
+                    "when": "isWorkspaceTrusted && resourcePath in chartdb.diagramPaths",
+                    "group": "navigation"
+                }
+            ]
+        }
     }
 }

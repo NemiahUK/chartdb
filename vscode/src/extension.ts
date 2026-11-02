@@ -1,4 +1,6 @@
+import { diagramFolder, registerLayoutActions } from './layout-actions';
 import * as vscode from 'vscode';
+import type { Uri } from 'vscode';
 import { createHash, randomBytes } from 'node:crypto';
 import { posix } from 'node:path';
 import { configSchema } from './config';
@@ -72,8 +74,9 @@ async function webviewHtml(
 }
 
 export function activate(context: vscode.ExtensionContext) {
+    registerLayoutActions(context);
     context.subscriptions.push(
-        vscode.commands.registerCommand('chartdb.open', async () => {
+        vscode.commands.registerCommand('chartdb.open', async (uri?: Uri) => {
             if (!vscode.workspace.isTrusted) return;
             const folders = vscode.workspace.workspaceFolders;
             if (!folders?.length) {
@@ -82,10 +85,21 @@ export function activate(context: vscode.ExtensionContext) {
                 );
                 return;
             }
+            const target = uri ?? vscode.window.activeTextEditor?.document.uri;
+            const matchingFolder = target
+                ? await diagramFolder(target)
+                : undefined;
+            if (uri && !matchingFolder) {
+                await vscode.window.showInformationMessage(
+                    'This file is not the layout or DBML source configured in its repository’s .chartdb.json.'
+                );
+                return;
+            }
             const folder =
-                folders.length === 1
+                matchingFolder ??
+                (folders.length === 1
                     ? folders[0]
-                    : await vscode.window.showWorkspaceFolderPick();
+                    : await vscode.window.showWorkspaceFolderPick());
             if (!folder) return;
             const key = folder.uri.toString();
             const existing = sessions.get(key);
@@ -135,7 +149,10 @@ export function activate(context: vscode.ExtensionContext) {
                         await task();
                     })
                     .catch((error) => {
-                        post({ type: 'error', message: messageText(error) });
+                        post({
+                            type: 'error',
+                            message: messageText(error),
+                        });
                         if (disposed)
                             void vscode.window.showErrorMessage(
                                 `ChartDB could not save the final layout: ${messageText(error)}. Reopen ChartDB to recover it.`

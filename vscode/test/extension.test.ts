@@ -105,11 +105,15 @@ describe('extension file bridge', () => {
 
     it('notifies the UI after a schema change and ignores unrelated files', async () => {
         const count = messages().length;
-        mock.fileListeners[0](new mock.Uri('/repo/unrelated.txt'));
+        mock.fileListeners.forEach((listener) =>
+            listener(new mock.Uri('/repo/unrelated.txt'))
+        );
         await tick();
         expect(messages()).toHaveLength(count);
         mock.files.set('/repo/schema.dbml', 'Table new_table {\n id int\n}');
-        mock.fileListeners[0](new mock.Uri('/repo/schema.dbml'));
+        mock.fileListeners.forEach((listener) =>
+            listener(new mock.Uri('/repo/schema.dbml'))
+        );
         await tick();
         expect(messages().at(-1)).toMatchObject({
             type: 'snapshot',
