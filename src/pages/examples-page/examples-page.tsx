@@ -57,11 +57,7 @@ const ExamplesPageComponent: React.FC = () => {
                 <nav className="flex h-12 flex-row items-center justify-between border-b px-4">
                     <div className="flex flex-1 justify-start gap-x-3">
                         <div className="flex items-center font-primary">
-                            <a
-                                href="https://chartdb.io"
-                                className="cursor-pointer"
-                                rel="noreferrer"
-                            >
+                            <span title="ChartDB — open-source database diagrams">
                                 <img
                                     src={
                                         effectiveTheme === 'light'
@@ -71,7 +67,7 @@ const ExamplesPageComponent: React.FC = () => {
                                     alt="chartDB"
                                     className="h-4 max-w-fit"
                                 />
-                            </a>
+                            </span>
                         </div>
                     </div>
                     <div className="group flex flex-1 flex-row items-center justify-center"></div>

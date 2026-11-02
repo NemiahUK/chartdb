@@ -23,7 +23,7 @@ import { databaseTypeToLabelMap } from '@/lib/databases';
 import { DatabaseType } from '@/lib/domain/database-type';
 import { Annoyed, Sparkles, Blocks, Wand2 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import type { BaseDialogProps } from '../common/base-dialog-props';
 import type { Diagram } from '@/lib/domain/diagram';
 import { useDiagramFilter } from '@/context/diagram-filter-context/use-diagram-filter';
@@ -199,33 +199,8 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
                 <div className="flex flex-col items-center justify-center gap-1 text-sm">
                     <Annoyed className="size-10" />
                     <Label className="text-sm">
-                        <Trans
-                            i18nKey="export_sql_dialog.error.message" // optional -> fallbacks to defaults if not provided
-                            components={[
-                                <a
-                                    key={0}
-                                    href="mailto:support@chartdb.io"
-                                    target="_blank"
-                                    className="text-pink-600 hover:underline"
-                                    rel="noreferrer"
-                                />,
-                            ]}
-                        />
+                        Could not export SQL. Please try again.
                     </Label>
-                    <div>
-                        <Trans
-                            i18nKey="export_sql_dialog.error.description" // optional -> fallbacks to defaults if not provided
-                            components={[
-                                <a
-                                    key={0}
-                                    href="https://github.com/chartdb/chartdb"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-pink-600 hover:underline"
-                                />,
-                            ]}
-                        />
-                    </div>
                 </div>
             </div>
         ),

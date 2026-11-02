@@ -14,7 +14,7 @@ import { NotesList } from './notes-list/notes-list';
 export interface NotesTabProps {}
 
 export const NotesTab: React.FC<NotesTabProps> = () => {
-    const { createNote, notes, readonly } = useChartDB();
+    const { createNote, notes, layoutReadonly: readonly } = useChartDB();
     const viewport = useViewport();
     const { t } = useTranslation();
     const { openNoteFromSidebar } = useLayout();

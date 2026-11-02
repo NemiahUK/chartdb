@@ -39,7 +39,11 @@ export interface AreaListItemProps {
 
 export const AreaListItem = React.forwardRef<HTMLDivElement, AreaListItemProps>(
     ({ area }, forwardedRef) => {
-        const { updateArea, removeArea, readonly } = useChartDB();
+        const {
+            updateArea,
+            removeArea,
+            layoutReadonly: readonly,
+        } = useChartDB();
         const { t } = useTranslation();
         const { focusOnArea } = useFocusOn();
         const [editMode, setEditMode] = React.useState(false);

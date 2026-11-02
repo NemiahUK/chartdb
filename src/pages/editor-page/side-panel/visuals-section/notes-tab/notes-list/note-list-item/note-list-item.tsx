@@ -30,7 +30,11 @@ export interface NoteListItemProps {
 
 export const NoteListItem = React.forwardRef<HTMLDivElement, NoteListItemProps>(
     ({ note }, forwardedRef) => {
-        const { updateNote, removeNote, readonly } = useChartDB();
+        const {
+            updateNote,
+            removeNote,
+            layoutReadonly: readonly,
+        } = useChartDB();
         const { t } = useTranslation();
         const { focusOnNote } = useFocusOn();
 

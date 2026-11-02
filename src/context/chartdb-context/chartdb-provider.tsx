@@ -1,3 +1,4 @@
+import { lockSchema } from '@/repository/guard';
 import React, { useCallback, useMemo, useState } from 'react';
 import type { DBTable } from '@/lib/domain/db-table';
 import { deepCopy, generateId } from '@/lib/utils';
@@ -38,11 +39,12 @@ import { getDefaultPrimaryKeyType } from '@/lib/data/data-types/data-types';
 export interface ChartDBProviderProps {
     diagram?: Diagram;
     readonly?: boolean;
+    repositoryMode?: boolean;
 }
 
 export const ChartDBProvider: React.FC<
     React.PropsWithChildren<ChartDBProviderProps>
-> = ({ children, diagram, readonly: readonlyProp }) => {
+> = ({ children, diagram, readonly: readonlyProp, repositoryMode = false }) => {
     const { hasDiff } = useDiff();
     const storageDB = useStorage();
     const events = useEventEmitter<ChartDBEvent>();
@@ -136,8 +138,8 @@ export const ChartDBProvider: React.FC<
     );
 
     const db = useMemo(
-        () => (readonly ? storageInitialValue : storageDB),
-        [storageDB, readonly]
+        () => (readonly || repositoryMode ? storageInitialValue : storageDB),
+        [storageDB, readonly, repositoryMode]
     );
 
     const currentDiagram: Diagram = useMemo(
@@ -2095,92 +2097,95 @@ export const ChartDBProvider: React.FC<
         ]
     );
 
+    const context: ChartDBContext = {
+        diagramId,
+        diagramName,
+        databaseType,
+        tables,
+        relationships,
+        dependencies,
+        areas,
+        notes,
+        currentDiagram,
+        schemas,
+        events,
+        readonly,
+        layoutReadonly: readonly,
+        repositoryMode,
+        updateDiagramData,
+        updateDiagramId,
+        updateDiagramName,
+        loadDiagram,
+        loadDiagramFromData,
+        updateDatabaseType,
+        updateDatabaseEdition,
+        clearDiagramData,
+        deleteDiagram,
+        updateDiagramUpdatedAt,
+        createTable,
+        addTable,
+        addTables,
+        getTable,
+        removeTable,
+        removeTables,
+        updateTable,
+        updateTablesState,
+        updateField,
+        removeField,
+        createField,
+        addField,
+        addIndex,
+        createIndex,
+        removeIndex,
+        getField,
+        getIndex,
+        updateIndex,
+        createCheckConstraint,
+        addCheckConstraint,
+        removeCheckConstraint,
+        updateCheckConstraint,
+        addRelationship,
+        addRelationships,
+        createRelationship,
+        getRelationship,
+        removeRelationship,
+        removeRelationships,
+        updateRelationship,
+        addDependency,
+        addDependencies,
+        createDependency,
+        getDependency,
+        removeDependency,
+        removeDependencies,
+        updateDependency,
+        createArea,
+        addArea,
+        addAreas,
+        getArea,
+        removeArea,
+        removeAreas,
+        updateArea,
+        customTypes,
+        createCustomType,
+        addCustomType,
+        addCustomTypes,
+        getCustomType,
+        removeCustomType,
+        removeCustomTypes,
+        updateCustomType,
+        highlightCustomTypeId,
+        highlightedCustomType,
+        createNote,
+        addNote,
+        addNotes,
+        getNote,
+        removeNote,
+        removeNotes,
+        updateNote,
+    };
     return (
         <chartDBContext.Provider
-            value={{
-                diagramId,
-                diagramName,
-                databaseType,
-                tables,
-                relationships,
-                dependencies,
-                areas,
-                notes,
-                currentDiagram,
-                schemas,
-                events,
-                readonly,
-                updateDiagramData,
-                updateDiagramId,
-                updateDiagramName,
-                loadDiagram,
-                loadDiagramFromData,
-                updateDatabaseType,
-                updateDatabaseEdition,
-                clearDiagramData,
-                deleteDiagram,
-                updateDiagramUpdatedAt,
-                createTable,
-                addTable,
-                addTables,
-                getTable,
-                removeTable,
-                removeTables,
-                updateTable,
-                updateTablesState,
-                updateField,
-                removeField,
-                createField,
-                addField,
-                addIndex,
-                createIndex,
-                removeIndex,
-                getField,
-                getIndex,
-                updateIndex,
-                createCheckConstraint,
-                addCheckConstraint,
-                removeCheckConstraint,
-                updateCheckConstraint,
-                addRelationship,
-                addRelationships,
-                createRelationship,
-                getRelationship,
-                removeRelationship,
-                removeRelationships,
-                updateRelationship,
-                addDependency,
-                addDependencies,
-                createDependency,
-                getDependency,
-                removeDependency,
-                removeDependencies,
-                updateDependency,
-                createArea,
-                addArea,
-                addAreas,
-                getArea,
-                removeArea,
-                removeAreas,
-                updateArea,
-                customTypes,
-                createCustomType,
-                addCustomType,
-                addCustomTypes,
-                getCustomType,
-                removeCustomType,
-                removeCustomTypes,
-                updateCustomType,
-                highlightCustomTypeId,
-                highlightedCustomType,
-                createNote,
-                addNote,
-                addNotes,
-                getNote,
-                removeNote,
-                removeNotes,
-                updateNote,
-            }}
+            value={repositoryMode ? lockSchema(context) : context}
         >
             {children}
         </chartDBContext.Provider>

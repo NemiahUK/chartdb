@@ -1,3 +1,4 @@
+import { useChartDB } from '@/hooks/use-chartdb';
 import React, { useCallback, useState } from 'react';
 import type { DialogContext } from './dialog-context';
 import { dialogContext } from './dialog-context';
@@ -15,7 +16,6 @@ import { ImportDatabaseDialog } from '@/dialogs/import-database-dialog/import-da
 import type { TableSchemaDialogProps } from '@/dialogs/table-schema-dialog/table-schema-dialog';
 import { TableSchemaDialog } from '@/dialogs/table-schema-dialog/table-schema-dialog';
 import { emptyFn } from '@/lib/utils';
-import { StarUsDialog } from '@/dialogs/star-us-dialog/star-us-dialog';
 import type { ExportImageDialogProps } from '@/dialogs/export-image-dialog/export-image-dialog';
 import { ExportImageDialog } from '@/dialogs/export-image-dialog/export-image-dialog';
 import { ExportDiagramDialog } from '@/dialogs/export-diagram-dialog/export-diagram-dialog';
@@ -26,6 +26,7 @@ import { UpdateDBMLDialog } from '@/dialogs/update-dbml-dialog/update-dbml-dialo
 export const DialogProvider: React.FC<React.PropsWithChildren> = ({
     children,
 }) => {
+    const { repositoryMode } = useChartDB();
     const [openNewDiagramDialog, setOpenNewDiagramDialog] = useState(false);
     const [newDiagramDialogParams, setNewDiagramDialogParams] =
         useState<Omit<CreateDiagramDialogProps, 'dialog'>>();
@@ -63,8 +64,6 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
             },
             [setOpenCreateRelationshipDialog]
         );
-
-    const [openStarUsDialog, setOpenStarUsDialog] = useState(false);
 
     // Export image dialog
     const [openExportImageDialog, setOpenExportImageDialog] = useState(false);
@@ -168,8 +167,6 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
                 },
                 openTableSchemaDialog: openTableSchemaDialogHandler,
                 closeTableSchemaDialog: () => setOpenTableSchemaDialog(false),
-                openStarUsDialog: () => setOpenStarUsDialog(true),
-                closeStarUsDialog: () => setOpenStarUsDialog(false),
                 closeExportImageDialog: () => setOpenExportImageDialog(false),
                 openExportImageDialog: openExportImageDialogHandler,
                 openExportDiagramDialog: () => setOpenExportDiagramDialog(true),
@@ -183,41 +180,48 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
             }}
         >
             {children}
-            <CreateDiagramDialog
-                dialog={{ open: openNewDiagramDialog }}
-                {...newDiagramDialogParams}
-            />
-            <OpenDiagramDialog
-                dialog={{ open: openOpenDiagramDialog }}
-                {...openDiagramDialogParams}
-            />
-            <ExportSQLDialog
-                dialog={{ open: openExportSQLDialog }}
-                {...exportSQLDialogParams}
-            />
-            <CreateRelationshipDialog
-                dialog={{ open: openCreateRelationshipDialog }}
-                {...createRelationshipDialogParams}
-            />
-            <ImportDatabaseDialog
-                dialog={{ open: openImportDatabaseDialog }}
-                {...importDatabaseDialogParams}
-            />
-            <TableSchemaDialog
-                dialog={{ open: openTableSchemaDialog }}
-                {...tableSchemaDialogParams}
-            />
-            <StarUsDialog dialog={{ open: openStarUsDialog }} />
-            <ExportImageDialog
-                dialog={{ open: openExportImageDialog }}
-                {...exportImageDialogParams}
-            />
-            <ExportDiagramDialog dialog={{ open: openExportDiagramDialog }} />
-            <ImportDiagramDialog dialog={{ open: openImportDiagramDialog }} />
-            <UpdateDBMLDialog
-                dialog={{ open: openUpdateDBMLDialog }}
-                {...updateDBMLDialogParams}
-            />
+            {!repositoryMode && (
+                <>
+                    <CreateDiagramDialog
+                        dialog={{ open: openNewDiagramDialog }}
+                        {...newDiagramDialogParams}
+                    />
+                    <OpenDiagramDialog
+                        dialog={{ open: openOpenDiagramDialog }}
+                        {...openDiagramDialogParams}
+                    />
+                    <ExportSQLDialog
+                        dialog={{ open: openExportSQLDialog }}
+                        {...exportSQLDialogParams}
+                    />
+                    <CreateRelationshipDialog
+                        dialog={{ open: openCreateRelationshipDialog }}
+                        {...createRelationshipDialogParams}
+                    />
+                    <ImportDatabaseDialog
+                        dialog={{ open: openImportDatabaseDialog }}
+                        {...importDatabaseDialogParams}
+                    />
+                    <TableSchemaDialog
+                        dialog={{ open: openTableSchemaDialog }}
+                        {...tableSchemaDialogParams}
+                    />
+                    <ExportImageDialog
+                        dialog={{ open: openExportImageDialog }}
+                        {...exportImageDialogParams}
+                    />
+                    <ExportDiagramDialog
+                        dialog={{ open: openExportDiagramDialog }}
+                    />
+                    <ImportDiagramDialog
+                        dialog={{ open: openImportDiagramDialog }}
+                    />
+                    <UpdateDBMLDialog
+                        dialog={{ open: openUpdateDBMLDialog }}
+                        {...updateDBMLDialogParams}
+                    />
+                </>
+            )}
         </dialogContext.Provider>
     );
 };

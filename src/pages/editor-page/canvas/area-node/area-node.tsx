@@ -41,7 +41,7 @@ export type AreaNodeType = Node<
 
 export const AreaNode: React.FC<NodeProps<AreaNodeType>> = React.memo(
     ({ selected, dragging, data: { area } }) => {
-        const { updateArea, readonly } = useChartDB();
+        const { updateArea, layoutReadonly: readonly } = useChartDB();
         const { t } = useTranslation();
         const [editMode, setEditMode] = useState(false);
         const [areaName, setAreaName] = useState(area.name);

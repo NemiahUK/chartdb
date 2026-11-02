@@ -8,7 +8,7 @@ import type { Diagram } from '@/lib/domain/diagram';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-export const useDiagramLoader = () => {
+export const useDiagramLoader = (disabled = false) => {
     const [initialDiagram, setInitialDiagram] = useState<Diagram | undefined>();
     const { diagramId } = useParams<{ diagramId: string }>();
     const { config } = useConfig();
@@ -22,7 +22,7 @@ export const useDiagramLoader = () => {
     const currentDiagramLoadingRef = useRef<string | undefined>(undefined);
 
     useEffect(() => {
-        if (!config) {
+        if (disabled || !config) {
             return;
         }
 
@@ -74,6 +74,7 @@ export const useDiagramLoader = () => {
 
         loadDefaultDiagram();
     }, [
+        disabled,
         diagramId,
         openCreateDiagramDialog,
         config,

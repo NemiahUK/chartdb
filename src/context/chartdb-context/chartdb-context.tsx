@@ -80,6 +80,8 @@ export interface ChartDBContext {
     currentDiagram: Diagram;
     events: EventEmitter<ChartDBEvent>;
     readonly?: boolean;
+    layoutReadonly?: boolean;
+    repositoryMode?: boolean;
 
     highlightedCustomType?: DBCustomType;
     highlightCustomTypeId: (id?: string) => void;

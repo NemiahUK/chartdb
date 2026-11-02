@@ -82,6 +82,10 @@ export default [
         },
     },
     {
+        files: ['scripts/*.mjs', 'vscode/src/**/*.ts'],
+        languageOptions: { globals: globals.node },
+    },
+    {
         files: ['sst.config.ts'],
         rules: {
             '@typescript-eslint/triple-slash-reference': 'off',

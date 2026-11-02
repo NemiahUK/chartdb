@@ -1,4 +1,6 @@
-import React, { useCallback } from 'react';
+import { useRepository } from '@/repository/repository-context';
+import { RepositoryToolbar } from '@/repository/repository-toolbar';
+import React from 'react';
 import ChartDBLogo from '@/assets/logo-2.png';
 import { DiagramName } from './diagram-name';
 import { LanguageNav } from './language-nav/language-nav';
@@ -10,18 +12,10 @@ import { MenuIcon } from 'lucide-react';
 export interface TopNavbarMobileProps {}
 
 export const TopNavbarMobile: React.FC<TopNavbarMobileProps> = () => {
-    const renderStars = useCallback(() => {
-        return (
-            <iframe
-                src="https://ghbtns.com/github-btn.html?user=chartdb&repo=chartdb&type=star&size=small&text=false"
-                width="25"
-                height="20"
-                title="GitHub"
-            ></iframe>
-        );
-    }, []);
-
     const { toggleSidebar } = useSidebar();
+
+    const repository = useRepository();
+    if (repository) return <RepositoryToolbar />;
 
     return (
         <nav className="flex flex-col justify-between border-b px-3 md:h-12 md:flex-row md:items-center md:px-4">
@@ -35,21 +29,16 @@ export const TopNavbarMobile: React.FC<TopNavbarMobileProps> = () => {
                         >
                             <MenuIcon className="size-5" />
                         </Button>
-                        <a
-                            href="https://chartdb.io"
-                            className="cursor-pointer"
-                            rel="noreferrer"
-                        >
+                        <span title="ChartDB — open-source database diagrams">
                             <img
                                 src={ChartDBLogo}
                                 alt="chartDB"
                                 className="h-4 max-w-fit"
                             />
-                        </a>
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {renderStars()}
                         <LanguageNav />
                     </div>
                 </div>

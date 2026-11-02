@@ -15,7 +15,9 @@
         "test": "vitest",
         "test:ci": "vitest run --reporter=verbose --bail=1",
         "test:ui": "vitest --ui",
-        "test:coverage": "vitest --coverage"
+        "test:coverage": "vitest --coverage",
+        "vscode:build": "tsc -b && tsc -p vscode/tsconfig.json && vite build --config vite.vscode.config.ts && node scripts/build-vscode.mjs",
+        "vscode:package": "npm run vscode:build && cd vscode && vsce package --no-dependencies --allow-missing-repository"
     },
     "dependencies": {
         "@ai-sdk/openai": "^2.0.72",
@@ -91,11 +93,14 @@
         "@types/node": "^24.10.4",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
+        "@types/vscode": "^1.90.0",
         "@typescript-eslint/eslint-plugin": "^8.18.0",
         "@typescript-eslint/parser": "^8.18.0",
         "@vitejs/plugin-react": "^5.1.2",
         "@vitest/ui": "^3.2.4",
+        "@vscode/vsce": "^4.1.0",
         "autoprefixer": "^10.4.20",
+        "esbuild": "^0.28.2",
         "eslint": "^9.16.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-css-modules": "^2.12.0",

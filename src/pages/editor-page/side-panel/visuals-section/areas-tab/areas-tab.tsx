@@ -14,7 +14,7 @@ import { AreaList } from './areas-list/areas-list';
 export interface AreasTabProps {}
 
 export const AreasTab: React.FC<AreasTabProps> = () => {
-    const { createArea, areas, readonly } = useChartDB();
+    const { createArea, areas, layoutReadonly: readonly } = useChartDB();
     const viewport = useViewport();
     const { t } = useTranslation();
     const { openAreaFromSidebar } = useLayout();

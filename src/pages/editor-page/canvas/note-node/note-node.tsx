@@ -29,7 +29,7 @@ export const NoteNode: React.FC<NoteNodeProps> = ({
     dragging,
 }) => {
     const { note } = data;
-    const { updateNote, removeNote, readonly } = useChartDB();
+    const { updateNote, removeNote, layoutReadonly: readonly } = useChartDB();
     const [editMode, setEditMode] = useState(false);
     const [content, setContent] = useState(note.content);
     const textareaRef = useRef<HTMLTextAreaElement>(null);

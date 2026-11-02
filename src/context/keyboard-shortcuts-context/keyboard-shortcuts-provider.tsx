@@ -1,3 +1,4 @@
+import { useRepository } from '@/repository/repository-context';
 import React from 'react';
 import { keyboardShortcutsContext } from './keyboard-shortcuts-context';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -14,6 +15,7 @@ import { useReactFlow } from '@xyflow/react';
 export const KeyboardShortcutsProvider: React.FC<React.PropsWithChildren> = ({
     children,
 }) => {
+    const repository = useRepository();
     const { redo, undo } = useHistory();
     const { openOpenDiagramDialog } = useDialog();
     const { updateDiagramUpdatedAt } = useChartDB();
@@ -39,20 +41,22 @@ export const KeyboardShortcutsProvider: React.FC<React.PropsWithChildren> = ({
     useHotkeys(
         keyboardShortcutsForOS[KeyboardShortcutAction.OPEN_DIAGRAM]
             .keyCombination,
-        () => openOpenDiagramDialog(),
+        () => {
+            if (!repository) openOpenDiagramDialog();
+        },
         {
             preventDefault: true,
         },
-        [openOpenDiagramDialog]
+        [openOpenDiagramDialog, repository]
     );
     useHotkeys(
         keyboardShortcutsForOS[KeyboardShortcutAction.SAVE_DIAGRAM]
             .keyCombination,
-        updateDiagramUpdatedAt,
+        repository?.save ?? updateDiagramUpdatedAt,
         {
             preventDefault: true,
         },
-        [updateDiagramUpdatedAt]
+        [updateDiagramUpdatedAt, repository?.save]
     );
     useHotkeys(
         keyboardShortcutsForOS[KeyboardShortcutAction.TOGGLE_SIDE_PANEL]

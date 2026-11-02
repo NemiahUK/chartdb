@@ -20,8 +20,14 @@ import { defaultSchemas } from '@/lib/data/default-schemas';
 export const CanvasContextMenu: React.FC<React.PropsWithChildren> = ({
     children,
 }) => {
-    const { createTable, readonly, createArea, databaseType, createNote } =
-        useChartDB();
+    const {
+        createTable,
+        readonly,
+        layoutReadonly,
+        createArea,
+        databaseType,
+        createNote,
+    } = useChartDB();
     const { schemasDisplayed } = useDiagramFilter();
     const { openCreateRelationshipDialog, openImportDatabaseDialog } =
         useDialog();
@@ -159,11 +165,12 @@ export const CanvasContextMenu: React.FC<React.PropsWithChildren> = ({
 
     return (
         <ContextMenu>
-            <ContextMenuTrigger disabled={readonly}>
+            <ContextMenuTrigger disabled={layoutReadonly}>
                 {children}
             </ContextMenuTrigger>
             <ContextMenuContent>
                 <ContextMenuItem
+                    disabled={readonly}
                     onClick={createTableHandler}
                     className="flex justify-between gap-4"
                 >
@@ -172,6 +179,7 @@ export const CanvasContextMenu: React.FC<React.PropsWithChildren> = ({
                 </ContextMenuItem>
                 {showDBViews ? (
                     <ContextMenuItem
+                        disabled={readonly}
                         onClick={createViewHandler}
                         className="flex justify-between gap-4"
                     >
@@ -180,6 +188,7 @@ export const CanvasContextMenu: React.FC<React.PropsWithChildren> = ({
                     </ContextMenuItem>
                 ) : null}
                 <ContextMenuItem
+                    disabled={readonly}
                     onClick={createRelationshipHandler}
                     className="flex justify-between gap-4"
                 >
@@ -203,6 +212,7 @@ export const CanvasContextMenu: React.FC<React.PropsWithChildren> = ({
                 </ContextMenuItem>{' '}
                 <ContextMenuSeparator />
                 <ContextMenuItem
+                    disabled={readonly}
                     onClick={importSqlDbmlHandler}
                     className="flex justify-between gap-4"
                 >

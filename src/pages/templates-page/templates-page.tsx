@@ -41,11 +41,7 @@ const TemplatesPageComponent: React.FC = () => {
                 <nav className="flex h-12 shrink-0 flex-row items-center justify-between border-b px-4">
                     <div className="flex flex-1 justify-start gap-x-3">
                         <div className="flex items-center font-primary">
-                            <a
-                                href="https://chartdb.io"
-                                className="cursor-pointer"
-                                rel="noreferrer"
-                            >
+                            <span title="ChartDB — open-source database diagrams">
                                 <img
                                     src={
                                         effectiveTheme === 'light'
@@ -55,17 +51,10 @@ const TemplatesPageComponent: React.FC = () => {
                                     alt="chartDB"
                                     className="h-4 max-w-fit"
                                 />
-                            </a>
+                            </span>
                         </div>
                     </div>
-                    <div className="flex flex-1 justify-end">
-                        <iframe
-                            src={`https://ghbtns.com/github-btn.html?user=chartdb&repo=chartdb&type=star&size=large&text=false`}
-                            width="40"
-                            height="30"
-                            title="GitHub"
-                        ></iframe>
-                    </div>
+                    <div className="flex flex-1 justify-end"></div>
                 </nav>
                 <div className="flex flex-col p-3 text-center md:px-28 md:text-left">
                     <h1 className="font-primary text-2xl font-bold">

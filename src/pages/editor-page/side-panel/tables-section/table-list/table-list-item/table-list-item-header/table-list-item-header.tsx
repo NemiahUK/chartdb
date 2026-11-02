@@ -56,6 +56,7 @@ export const TableListItemHeader: React.FC<TableListItemHeaderProps> = ({
         schemas,
         databaseType,
         readonly,
+        layoutReadonly,
     } = useChartDB();
     const { schemasDisplayed } = useDiagramFilter();
     const { openTableSchemaDialog } = useDialog();
@@ -254,7 +255,7 @@ export const TableListItemHeader: React.FC<TableListItemHeaderProps> = ({
 
     return (
         <div className="group flex h-11 flex-1 items-center justify-between gap-1 overflow-hidden">
-            {!readonly ? (
+            {!layoutReadonly ? (
                 <div
                     className="flex cursor-move items-center justify-center"
                     {...listeners}

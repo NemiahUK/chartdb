@@ -18,7 +18,7 @@ export interface AreaNodeContextMenuProps {
 export const AreaNodeContextMenu: React.FC<
     React.PropsWithChildren<AreaNodeContextMenuProps>
 > = ({ children, area, onEditName }) => {
-    const { removeArea, readonly } = useChartDB();
+    const { removeArea, layoutReadonly: readonly } = useChartDB();
     const { isMd: isDesktop } = useBreakpoint('md');
 
     const removeAreaHandler = useCallback(() => {

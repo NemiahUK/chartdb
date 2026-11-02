@@ -292,6 +292,7 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
         events,
         dependencies,
         readonly,
+        layoutReadonly,
         removeArea,
         updateArea,
         removeNote,
@@ -841,6 +842,7 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
 
     const onConnectHandler = useCallback(
         async (params: AddEdgeParams) => {
+            if (readonly) return;
             if (
                 params.sourceHandle?.startsWith?.(
                     TOP_SOURCE_HANDLE_ID_PREFIX
@@ -894,7 +896,14 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                 targetFieldId,
             });
         },
-        [createRelationship, createDependency, getField, toast, databaseType]
+        [
+            createRelationship,
+            createDependency,
+            getField,
+            toast,
+            databaseType,
+            readonly,
+        ]
     );
 
     const onEdgesChangeHandler: OnEdgesChange<EdgeType> = useCallback(
@@ -1072,7 +1081,12 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
 
             if (readonly) {
                 changesToApply = changesToApply.filter(
-                    (change) => change.type !== 'remove'
+                    (change) =>
+                        change.type !== 'remove' ||
+                        (!layoutReadonly &&
+                            ['area', 'note'].includes(
+                                getNode(change.id)?.type ?? ''
+                            ))
                 );
             }
 
@@ -1370,6 +1384,7 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
             updateNote,
             removeNote,
             readonly,
+            layoutReadonly,
             tables,
             areas,
             getNode,
@@ -1910,7 +1925,7 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                         showInteractive={false}
                         className="!shadow-none"
                     >
-                        <Toolbar readonly={readonly} />
+                        <Toolbar readonly={layoutReadonly} />
                     </Controls>
                     {showMiniMapOnCanvas && (
                         <MiniMap

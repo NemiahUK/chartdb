@@ -1,3 +1,9 @@
+## Repository diagrams in VS Code
+
+This fork also includes a VS Code extension that reads generated DBML and saves presentation-only layout JSON to the repository. The web app remains available. See [extension setup and usage](vscode/README.md), including the Cosmos configuration and migration from an existing ChartDB export.
+
+Build an installable extension with `npm run vscode:package`.
+
 <h1 align="center">
   <a href="https://chartdb.io#gh-light-mode-only">
     <img src="https://github.com/chartdb/chartdb/blob/main/src/assets/logo-light.png" width="400" height="70" alt="ChartDB">

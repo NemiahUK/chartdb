@@ -60,6 +60,7 @@ export const TableListItemContent: React.FC<TableListItemContentProps> = ({
         updateCheckConstraint,
         updateTable,
         readonly,
+        layoutReadonly,
         databaseType,
     } = useChartDB();
     const { t } = useTranslation();
@@ -413,7 +414,7 @@ export const TableListItemContent: React.FC<TableListItemContentProps> = ({
             {!readonly ? <Separator className="" /> : null}
 
             <div className="flex flex-1 items-center justify-between">
-                {!table.isView && !readonly ? (
+                {!table.isView && !layoutReadonly ? (
                     <ColorPicker
                         color={color}
                         onChange={(color) => updateTable(table.id, { color })}

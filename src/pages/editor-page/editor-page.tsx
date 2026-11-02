@@ -1,9 +1,8 @@
+import { useRepository } from '@/repository/repository-context';
 import React, { Suspense, useEffect } from 'react';
 import { useChartDB } from '@/hooks/use-chartdb';
-import { useDialog } from '@/hooks/use-dialog';
 import { Toaster } from '@/components/toast/toaster';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
-import { useLocalConfig } from '@/hooks/use-local-config';
 import { FullScreenLoaderProvider } from '@/context/full-screen-spinner-context/full-screen-spinner-provider';
 import { LayoutProvider } from '@/context/layout-context/layout-provider';
 import { LocalConfigProvider } from '@/context/local-config-context/local-config-provider';
@@ -21,14 +20,10 @@ import { Spinner } from '@/components/spinner/spinner';
 import { Helmet } from 'react-helmet-async';
 import { AlertProvider } from '@/context/alert-context/alert-provider';
 import { CanvasProvider } from '@/context/canvas-context/canvas-provider';
-import { HIDE_CHARTDB_CLOUD } from '@/lib/env';
 import { useDiagramLoader } from './use-diagram-loader';
 import { DiffProvider } from '@/context/diff-context/diff-provider';
 import { TopNavbarMock } from './top-navbar/top-navbar-mock';
 import { DiagramFilterProvider } from '@/context/diagram-filter-context/diagram-filter-provider';
-
-const OPEN_STAR_US_AFTER_SECONDS = 30;
-const SHOW_STAR_US_AGAIN_AFTER_DAYS = 1;
 
 export const EditorDesktopLayoutLazy = React.lazy(
     () => import('./editor-desktop-layout')
@@ -39,37 +34,18 @@ export const EditorMobileLayoutLazy = React.lazy(
 );
 
 const EditorPageComponent: React.FC = () => {
-    const { diagramName, currentDiagram } = useChartDB();
-    const { openStarUsDialog } = useDialog();
+    const { diagramName, currentDiagram, loadDiagramFromData } = useChartDB();
+    const repository = useRepository();
     const { isMd: isDesktop } = useBreakpoint('md');
-    const { starUsDialogLastOpen, setStarUsDialogLastOpen, githubRepoOpened } =
-        useLocalConfig();
-    const { initialDiagram } = useDiagramLoader();
-
+    const { initialDiagram } = useDiagramLoader(!!repository);
+    const repoDiagram = repository?.diagram;
+    const onChange = repository?.onChange;
     useEffect(() => {
-        if (HIDE_CHARTDB_CLOUD) {
-            return;
-        }
-
-        if (!currentDiagram?.id || githubRepoOpened) {
-            return;
-        }
-
-        if (
-            new Date().getTime() - starUsDialogLastOpen >
-            1000 * 60 * 60 * 24 * SHOW_STAR_US_AGAIN_AFTER_DAYS
-        ) {
-            const lastOpen = new Date().getTime();
-            setStarUsDialogLastOpen(lastOpen);
-            setTimeout(openStarUsDialog, OPEN_STAR_US_AFTER_SECONDS * 1000);
-        }
-    }, [
-        currentDiagram?.id,
-        githubRepoOpened,
-        openStarUsDialog,
-        setStarUsDialogLastOpen,
-        starUsDialogLastOpen,
-    ]);
+        if (repoDiagram) loadDiagramFromData(repoDiagram);
+    }, [repoDiagram, loadDiagramFromData]);
+    useEffect(() => {
+        onChange?.(currentDiagram);
+    }, [currentDiagram, onChange]);
 
     return (
         <>
@@ -97,11 +73,11 @@ const EditorPageComponent: React.FC = () => {
                 >
                     {isDesktop ? (
                         <EditorDesktopLayoutLazy
-                            initialDiagram={initialDiagram}
+                            initialDiagram={repoDiagram ?? initialDiagram}
                         />
                     ) : (
                         <EditorMobileLayoutLazy
-                            initialDiagram={initialDiagram}
+                            initialDiagram={repoDiagram ?? initialDiagram}
                         />
                     )}
                 </Suspense>
@@ -111,40 +87,48 @@ const EditorPageComponent: React.FC = () => {
     );
 };
 
-export const EditorPage: React.FC = () => (
-    <LocalConfigProvider>
-        <ThemeProvider>
-            <FullScreenLoaderProvider>
-                <LayoutProvider>
-                    <StorageProvider>
-                        <ConfigProvider>
-                            <RedoUndoStackProvider>
-                                <DiffProvider>
-                                    <ChartDBProvider>
-                                        <DiagramFilterProvider>
-                                            <HistoryProvider>
-                                                <ReactFlowProvider>
-                                                    <CanvasProvider>
-                                                        <ExportImageProvider>
-                                                            <AlertProvider>
-                                                                <DialogProvider>
-                                                                    <KeyboardShortcutsProvider>
-                                                                        <EditorPageComponent />
-                                                                    </KeyboardShortcutsProvider>
-                                                                </DialogProvider>
-                                                            </AlertProvider>
-                                                        </ExportImageProvider>
-                                                    </CanvasProvider>
-                                                </ReactFlowProvider>
-                                            </HistoryProvider>
-                                        </DiagramFilterProvider>
-                                    </ChartDBProvider>
-                                </DiffProvider>
-                            </RedoUndoStackProvider>
-                        </ConfigProvider>
-                    </StorageProvider>
-                </LayoutProvider>
-            </FullScreenLoaderProvider>
-        </ThemeProvider>
-    </LocalConfigProvider>
-);
+export const EditorPage: React.FC = () => {
+    const repository = useRepository();
+    const EditorStorage = repository ? React.Fragment : StorageProvider;
+    return (
+        <LocalConfigProvider>
+            <ThemeProvider>
+                <FullScreenLoaderProvider>
+                    <LayoutProvider>
+                        <EditorStorage>
+                            <ConfigProvider>
+                                <RedoUndoStackProvider>
+                                    <DiffProvider>
+                                        <ChartDBProvider
+                                            diagram={repository?.diagram}
+                                            repositoryMode={!!repository}
+                                            readonly={repository?.blocked}
+                                        >
+                                            <DiagramFilterProvider>
+                                                <HistoryProvider>
+                                                    <ReactFlowProvider>
+                                                        <CanvasProvider>
+                                                            <ExportImageProvider>
+                                                                <AlertProvider>
+                                                                    <DialogProvider>
+                                                                        <KeyboardShortcutsProvider>
+                                                                            <EditorPageComponent />
+                                                                        </KeyboardShortcutsProvider>
+                                                                    </DialogProvider>
+                                                                </AlertProvider>
+                                                            </ExportImageProvider>
+                                                        </CanvasProvider>
+                                                    </ReactFlowProvider>
+                                                </HistoryProvider>
+                                            </DiagramFilterProvider>
+                                        </ChartDBProvider>
+                                    </DiffProvider>
+                                </RedoUndoStackProvider>
+                            </ConfigProvider>
+                        </EditorStorage>
+                    </LayoutProvider>
+                </FullScreenLoaderProvider>
+            </ThemeProvider>
+        </LocalConfigProvider>
+    );
+};
