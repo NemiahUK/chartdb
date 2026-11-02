@@ -8,6 +8,7 @@ import { Menu } from './menu/menu';
 import { Button } from '@/components/button/button';
 import { useSidebar } from '@/components/sidebar/use-sidebar';
 import { MenuIcon } from 'lucide-react';
+import { VSCodeExtensionLink } from '@/components/vscode-extension-link/vscode-extension-link';
 
 export interface TopNavbarMobileProps {}
 
@@ -39,6 +40,7 @@ export const TopNavbarMobile: React.FC<TopNavbarMobileProps> = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <VSCodeExtensionLink />
                         <LanguageNav />
                     </div>
                 </div>

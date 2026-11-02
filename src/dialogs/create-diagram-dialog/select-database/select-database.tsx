@@ -12,6 +12,7 @@ import { DatabaseType } from '@/lib/domain/database-type';
 import { useTranslation } from 'react-i18next';
 import { SelectDatabaseContent } from './select-database-content';
 import { useDialog } from '@/hooks/use-dialog';
+import { VSCodeExtensionLink } from '@/components/vscode-extension-link/vscode-extension-link';
 
 export interface SelectDatabaseProps {
     onContinue: () => void;
@@ -82,6 +83,11 @@ export const SelectDatabase: React.FC<SelectDatabaseProps> = ({
                     </Button>
                 </div>
             </DialogFooter>
+            {!hasExistingDiagram && (
+                <div className="mt-4 border-t pt-3">
+                    <VSCodeExtensionLink />
+                </div>
+            )}
         </>
     );
 };

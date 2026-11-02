@@ -4,6 +4,8 @@ Open a generated DBML schema in VS Code and save table colours, positions, sizes
 
 ## Install
 
+On the hosted ChartDB site, click **VS Code extension** or visit `/vscode` to download the current VSIX and follow the setup guide. Use the browser download so the site's Cloudflare Access login applies. In WSL, SSH or a Dev Container, install into the remote environment that holds your repository. Updates use the same download and **Install from VSIX…** workflow.
+
 Build from the ChartDB repository root:
 
 ```sh

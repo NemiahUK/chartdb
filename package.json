@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "npm run lint && tsc -b && vite build",
+        "build:site": "npm run vscode:package && npm run build && node scripts/prepare-site-download.mjs",
         "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
         "lint:fix": "npm run lint -- --fix",
         "preview": "vite preview",

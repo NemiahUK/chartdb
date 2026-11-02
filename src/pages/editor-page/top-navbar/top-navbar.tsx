@@ -8,6 +8,7 @@ import { DiagramName } from './diagram-name';
 import { LastSaved } from './last-saved';
 import { LanguageNav } from './language-nav/language-nav';
 import { Menu } from './menu/menu';
+import { VSCodeExtensionLink } from '@/components/vscode-extension-link/vscode-extension-link';
 
 export interface TopNavbarProps {}
 
@@ -20,7 +21,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = () => {
     return (
         <nav className="flex flex-col justify-between border-b px-3 md:h-12 md:flex-row md:items-center md:px-4">
             <div className="flex flex-1 flex-col justify-between gap-x-1 md:flex-row md:justify-normal">
-                <div className="flex items-center justify-between pt-[8px] font-primary md:py-[10px]">
+                <div className="flex items-center justify-between gap-4 pt-[8px] font-primary md:py-[10px]">
                     <span title="ChartDB — open-source database diagrams">
                         <img
                             src={
@@ -32,6 +33,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = () => {
                             className="h-4 max-w-fit"
                         />
                     </span>
+                    <VSCodeExtensionLink />
                 </div>
                 <Menu />
             </div>

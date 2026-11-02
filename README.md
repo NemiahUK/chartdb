@@ -1,6 +1,6 @@
 ## Repository diagrams in VS Code
 
-This fork also includes a VS Code extension that reads generated DBML and saves presentation-only layout JSON to the repository. The web app remains available. See [extension setup and usage](vscode/README.md), including the Cosmos configuration and migration from an existing ChartDB export.
+This fork also includes a VS Code extension that reads generated DBML and saves presentation-only layout JSON to the repository. The web app remains available. The hosted site's **VS Code extension** link opens `/vscode` with a download and installation guide. See [extension setup and usage](vscode/README.md), including the Cosmos configuration and migration from an existing ChartDB export.
 
 Build an installable extension with `npm run vscode:package`.
 
@@ -146,16 +146,18 @@ VITE_LLM_MODEL_NAME=Qwen/Qwen2.5-32B-Instruct-AWQ
 
 ### Deploy To AWS With SST
 
-This repo includes an SST config for deploying the Vite app as a static site to S3 behind CloudFront. By default it uses the generated CloudFront domain, so it does not touch Route53 or any existing DNS setup.
+This repo includes an SST config for deploying the Vite app as a static site to S3 behind CloudFront at `chartdb.nemiah.app`. Cloudflare proxies the domain and Cloudflare Access protects the site, including extension downloads.
 
-This setup is intentionally production-only at the script level. The included npm scripts always deploy to and remove the `production` stage.
+This setup is intentionally production-only at the script level. The included npm scripts always deploy to and remove the `prod` stage.
 
 ```bash
 npm install
 npm run sst:deploy
 ```
 
-SST will build the app, upload `dist/` to S3, create a CloudFront distribution, and print the site URL after deploy.
+SST runs `npm run build:site`, which packages the VS Code extension, builds the web app, and copies the matching versioned VSIX into `dist/downloads/`. The `/vscode` page reads the version and download filename from the extension manifest. SST uploads `dist/` and invalidates the CDN cache.
+
+To verify the complete site locally, run `npm run build:site` followed by `npm run preview`, then open `/vscode`. `npm run dev` and `npm run build` remain web-only workflows and do not prepare the downloadable package. No VSIX binaries are committed. Bump `vscode/package.json` before releasing a changed extension so each download URL identifies its release; users install updates manually from the setup page.
 
 ```bash
 npm run sst:remove

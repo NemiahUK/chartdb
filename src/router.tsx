@@ -6,6 +6,14 @@ import type { TemplatesPageLoaderData } from './pages/templates-page/templates-p
 import { getTemplatesAndAllTags } from './templates-data/template-utils';
 
 const routes: RouteObject[] = [
+    {
+        path: 'vscode',
+        async lazy() {
+            const { VSCodePage } =
+                await import('./pages/vscode-page/vscode-page');
+            return { element: <VSCodePage /> };
+        },
+    },
     ...['', 'diagrams/:diagramId'].map((path) => ({
         path,
         async lazy() {

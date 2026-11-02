@@ -85,7 +85,7 @@ export default $config({
     const site = new sst.aws.StaticSite("ChartDBSite", {
       path: ".",
       build: {
-        command: "npm run build",
+        command: "npm run build:site",
         output: "dist",
       },
       domain: {
